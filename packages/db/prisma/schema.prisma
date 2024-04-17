@@ -14,7 +14,157 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id    String @id @default(uuid())
-  email String  @unique
+enum BranchType {
+  CSE
+  ISE
+  ECE
+  EEE
+  ME
+  CE
+  AE
 }
+
+model User {
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  usn String @unique
+  branch BranchType
+  batch Int
+  contact String
+  password String
+  isVerified Boolean @default(false)
+
+  profile Profile?
+}
+
+model Profile {
+  id String @id @default(uuid())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id])
+
+  dsaResults SubmittedDSAResults[]
+  aptitudeResults SubmittedAptitudeResults[]
+
+  dsaContests CompletedDSAContest[]
+  aptitudeContests CompletedAptitudeContest[]
+}
+
+model DSAContest {
+id String @id @default(uuid())
+contestNo  Int
+contestName String
+date DateTime
+batch Int
+
+questions DSAQuestion[]
+result DSAResult?
+completedStudents CompletedDSAContest[]
+
+}
+
+model DSAQuestion {
+  id String @id @default(uuid())
+  question String
+  inputOne String
+  outputOne String
+  inputTwo String
+  outputTwo String
+  inputThree String
+  outputThree String
+
+  contestId String
+  dsaContest DSAContest @relation(fields: [contestId], references: [id])
+}
+
+model CompletedDSAContest {
+  id String @id @default(uuid())
+  dsaContestId String
+  profileId String
+  profile Profile @relation(fields: [profileId], references: [id])
+  dsaContest DSAContest @relation(fields: [dsaContestId], references: [id])
+}
+
+model DSAResult {
+id String @id @default(uuid())
+batch Int
+contestNo  Int
+contestName String
+dsaContestId String @unique
+dsaContest  DSAContest @relation(fields: [dsaContestId], references: [id])
+
+results SubmittedDSAResults[]
+}
+
+model SubmittedDSAResults{
+  id String @id @default(uuid())
+  name String
+  usn String 
+  score Int
+  timeLeft Int
+  resultId String
+  profileId String
+  profile Profile @relation(fields: [profileId], references: [id])
+  result DSAResult @relation(fields: [resultId], references: [id])
+
+  @@unique([resultId, usn])
+}
+
+model AptitudeContest {
+id String @id @default(uuid())
+contestNo  Int
+contestName String
+batch Int
+date DateTime
+
+result AptitudeResult?
+completedStudents CompletedAptitudeContest[]
+questions AptitudeQuestion[]
+}
+
+model AptitudeQuestion {
+  id String @id @default(uuid())
+  question String
+  optionOne String
+  optionTwo String
+  optionThree String
+  optionFour String
+  ans String
+  contestId String
+  aptitudeContest AptitudeContest @relation(fields: [contestId], references: [id])
+}
+
+model CompletedAptitudeContest {
+  id String @id @default(uuid())
+  aptitudeContestId String
+  profileId String
+  profile Profile @relation(fields: [profileId], references: [id])
+  aptitudeContest AptitudeContest @relation(fields: [aptitudeContestId], references: [id])
+}
+
+model AptitudeResult {
+id String @id @default(uuid())
+contestNo  Int
+contestName String
+batch Int
+aptitudeContestId String @unique
+aptitudeContest AptitudeContest @relation(fields: [aptitudeContestId], references: [id])
+results SubmittedAptitudeResults[]
+}
+
+model SubmittedAptitudeResults{
+  id String @id @default(uuid())
+  name String
+  usn String 
+  score Int
+  timeLeft Int
+  resultId String
+  profileId String
+  profile Profile @relation(fields: [profileId], references: [id])
+  result AptitudeResult @relation(fields: [resultId], references: [id])
+
+  @@unique([resultId, usn])
+}
+
+
+
